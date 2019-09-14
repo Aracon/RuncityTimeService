@@ -35,7 +35,7 @@ namespace BGTimeService
 
             UpdateOnOffButtonView();
             
-            playbackEngine = new AudioPlaybackEngine();
+            playbackEngine = new AudioPlaybackEngine(44100, 2);
             startMp3File = null;
 
             settingControlsToLock = new Control[] { startTimePicker, numStartInterval,
@@ -205,7 +205,14 @@ namespace BGTimeService
 
         private void OnNewSecond(DateTime datetime)
         {
+            /*
+            if(datetime.Second%10==0)
+                playbackEngine.PlaySound(GetSoundFullPath("start.mp3"));
+            return;
+            */
+
             TimeSpan waitBeforeWelcomeSound = new TimeSpan(0, 0, 2);
+            TimeSpan addToStartSound = new TimeSpan(0, 0, 1);
 
             DateTime firstStart = startTimePicker.Value;
             int intervalMin = (int)numStartInterval.Value;
@@ -227,7 +234,7 @@ namespace BGTimeService
             TimeSpan? countdownLength = GetStartSoundDuration();
             if (countdownLength.HasValue)
             {
-                int? startingAfterTeamNumber = GetTeamNumber(datetime + countdownLength.Value, firstStart, intervalMin);
+                int? startingAfterTeamNumber = GetTeamNumber(datetime + countdownLength.Value - addToStartSound, firstStart, intervalMin);
                 if(startingAfterTeamNumber.HasValue && startingAfterTeamNumber.Value != 0)
                 {
                     if (startingAfterTeamNumber.Value >= teamMin && startingAfterTeamNumber.Value <= teamMax)
