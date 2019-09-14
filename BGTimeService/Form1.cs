@@ -10,6 +10,7 @@ using System.Diagnostics;
 using NAudio;
 using NAudio.Wave;
 using System.IO;
+using System.Net;
 
 namespace BGTimeService
 {
@@ -21,11 +22,17 @@ namespace BGTimeService
         Mp3FileReader startMp3File;
         Control[] settingControlsToLock;
 
+        TimeServiceState state;
+
+        TimeHttpServer httpServer;
+
         public MainForm()
         {
             InitializeComponent();
 
+            state = new TimeServiceState();
             lastSecondCalled = 0;
+            httpServer = new TimeHttpServer();
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -33,13 +40,17 @@ namespace BGTimeService
             DateTime now = DateTime.Now;
             startTimePicker.Value = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
 
-            UpdateOnOffButtonView();
+            UpdateOnOffButtonView(checkServiceActive);
+            UpdateOnOffButtonView(checkHttpActive);
+
             
             playbackEngine = new AudioPlaybackEngine(44100, 2);
             startMp3File = null;
 
             settingControlsToLock = new Control[] { startTimePicker, numStartInterval,
                 numFirstTeamNumber, numMaxTeamNumber, txtAudioFilesDir, bChooseAudioFilesDir };
+
+            state.IsServiceActive = false;
         }
 
         private void LockSettings(bool locked)
@@ -55,17 +66,18 @@ namespace BGTimeService
             lblStatusMsg.Text = msg;
         }
 
-        private void UpdateOnOffButtonView()
+        private void UpdateOnOffButtonView(CheckBox button)
         {
-            checkServiceActive.Font = new Font(checkServiceActive.Font, !checkServiceActive.Checked ? FontStyle.Bold : FontStyle.Regular);
-            if (checkServiceActive.Checked)
+            button.Font = new Font(button.Font, !button.Checked ? FontStyle.Bold : FontStyle.Regular);
+            if (button.Checked)
             {
-                checkServiceActive.Text = "Работает";
+                button.Text = "Отключить";
             }
             else
             {
-                checkServiceActive.Text = "Отключен";
+                button.Text = "Включить";
             }
+
         }
 
         private void bChooseAudioFilesDir_Click(object sender, EventArgs e)
@@ -98,34 +110,55 @@ namespace BGTimeService
                     OnNewSecond(DateTime.Now);
                 }
             }
+            UpdateOverallState();
+            UpdateHttpServerContent();
         }
 
         private void UpdateClock()
         {
             DateTime time = DateTime.Now;
-            lblCurrentTime.Text = DateTime.Now.ToString("HH:mm:ss");
+            string timeText = DateTime.Now.ToString("HH:mm:ss");
+            lblCurrentTime.Text = timeText;
+            state.CurrentTimeText = timeText;
         }
 
-        private int? GetTeamNumber(DateTime currentDateTime, DateTime firstStart, int intervalMin)
+        private void UpdateOverallState()
         {
-            if (currentDateTime.Second != 0)
-            {
-                return null;
-            }
+            state.IsServiceActive = checkServiceActive.Checked;
+        }
+
+        private void UpdateHttpServerContent()
+        {
+            string content = state.ToJson();
+            httpServer.Content = content;
+        }
+
+        private int? GetTeamNumber(DateTime currentDateTime, DateTime firstStart, int intervalMin, out bool intervalBeginsNow, out int secondsTillNextInterval)
+        {
             firstStart = firstStart.AddMinutes(-intervalMin);
             if (currentDateTime < firstStart)
             {
-                return null;
-            }            
-            TimeSpan timeInterval = currentDateTime - firstStart;
-            int minutes = (int)Math.Floor(timeInterval.TotalMinutes);
-
-            if(minutes % intervalMin != 0)
-            {
+                intervalBeginsNow = false;
+                secondsTillNextInterval = 0;
                 return null;
             }
 
+            TimeSpan timeInterval = currentDateTime - firstStart;
+            int minutes = (int)Math.Floor(timeInterval.TotalMinutes);
+
+            if(minutes % intervalMin != 0 || currentDateTime.Second != 0)
+            {
+                intervalBeginsNow = false;
+            } else
+            {
+                intervalBeginsNow = true;
+            }
+
             int teamNumber = minutes / intervalMin;
+
+            TimeSpan timeFromStart = currentDateTime - firstStart.AddMinutes(intervalMin * teamNumber);
+            secondsTillNextInterval = intervalMin * 60 - (int)Math.Floor(timeFromStart.TotalSeconds);
+
             return teamNumber; 
             
         }
@@ -219,8 +252,17 @@ namespace BGTimeService
             int teamMin = (int)numFirstTeamNumber.Value;
             int teamMax = (int)numMaxTeamNumber.Value;
 
-            int? startingTeamNumber = GetTeamNumber(datetime - waitBeforeWelcomeSound, firstStart, intervalMin);
-            if(startingTeamNumber.HasValue)
+
+            bool startingNow;
+            int secondsTillNextStart;
+            int? startingTeamNumberPure = GetTeamNumber(datetime, firstStart, intervalMin, out startingNow, out secondsTillNextStart);
+            state.CurrentStartingTeam = startingTeamNumberPure;
+            state.SecondsToStart = secondsTillNextStart;
+
+            Debug.WriteLine(string.Format("{4} Starting team: {0}{1} in {2}:{3}", startingTeamNumberPure, startingNow ? " NOW" : "", secondsTillNextStart / 60, secondsTillNextStart % 60, DateTime.Now.ToLongTimeString()));
+
+            int? startingTeamNumber = GetTeamNumber(datetime - waitBeforeWelcomeSound, firstStart, intervalMin, out startingNow, out secondsTillNextStart);
+            if(startingTeamNumber.HasValue && startingNow)
             {
                 if(startingTeamNumber.Value >= teamMin && startingTeamNumber.Value <= teamMax)
                 {
@@ -234,8 +276,8 @@ namespace BGTimeService
             TimeSpan? countdownLength = GetStartSoundDuration();
             if (countdownLength.HasValue)
             {
-                int? startingAfterTeamNumber = GetTeamNumber(datetime + countdownLength.Value - addToStartSound, firstStart, intervalMin);
-                if(startingAfterTeamNumber.HasValue && startingAfterTeamNumber.Value != 0)
+                int? startingAfterTeamNumber = GetTeamNumber(datetime + countdownLength.Value - addToStartSound, firstStart, intervalMin, out startingNow, out secondsTillNextStart);
+                if(startingAfterTeamNumber.HasValue && startingNow && startingAfterTeamNumber.Value != 0)
                 {
                     if (startingAfterTeamNumber.Value >= teamMin && startingAfterTeamNumber.Value <= teamMax)
                     {
@@ -262,12 +304,38 @@ namespace BGTimeService
 
         private void checkServiceActive_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateOnOffButtonView();
+            UpdateOnOffButtonView(checkServiceActive);
             if(checkServiceActive.Checked)
             {
                 checkLockSettings.Checked = true;
                 LoadStartSound(GetSoundFullPath("start.mp3"));
             }
+        }
+
+        private void checkHttpActive_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateOnOffButtonView(checkHttpActive);
+
+            try
+            {
+                if (checkHttpActive.Checked)
+                {
+                    httpServer.Start(txtHttpSubpath.Text, (int)numHttpPort.Value);
+                }
+                else
+                {
+                    httpServer.Stop();
+                }
+            } catch(HttpListenerException exc)
+            {
+                MessageBox.Show("Ошибка при запуске сервера: "+exc.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            checkHttpActive.Checked = httpServer.IsActive;
+
+            bool httpPropertiesActive = !checkHttpActive.Checked;
+            txtHttpSubpath.Enabled = httpPropertiesActive;
+            numHttpPort.Enabled = httpPropertiesActive;
         }
     }
 }
