@@ -73,6 +73,7 @@ namespace BGTimeService
             listener.BeginGetContext(OnContext, null);
 
             context.Response.ContentType = "application/json";
+            context.Response.Headers["Access-Control-Allow-Origin"] = "*";
             //context.Response.OutputStream.
 
             using(StreamWriter stream = new StreamWriter(context.Response.OutputStream))

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="./js/bootstrap-4.3.1/css/bootstrap.min.css">
+
+    <title>Бегущий Город - стартовый монитор</title>
+
+    <style type="text/css">
+        #app > .fullscreen {
+            min-height: 100vh;
+        }
+
+        .flex-fill {
+            flex:1 1 auto;
+        }
+
+        #app .header {
+            height: 10vh;
+            background-color: white;
+        }
+
+        #app .center-field {
+            height: 80vh;
+            background-color: white;
+        }
+
+        #app .bottom {
+            height: 10vh;
+        }
+
+        .teamnumber {
+            background-color: #1e7e34;
+            color: yellow;
+            font-size: 7vh;
+            font-weight: bold;
+            width: 46vw;
+            padding-left: 15pt;
+            padding-top: 5pt;
+            padding-bottom: 5pt;
+            margin-top: 4pt;
+            margin-bottom: 4pt;
+            margin-left: 4pt;
+            margin-right: 4pt;
+        }
+
+        #gamename {
+            font-size: 170%;
+            margin: 0 10pt;
+        }
+
+        #logo {
+            max-height: 100%;
+            max-width: 100%;
+        }
+
+        #center-field-header {
+
+        }
+
+        #center-timer-caption {
+            margin-top: 1vh;
+            font-size: 5vh
+        }
+
+        #center-timer-caption p {
+            line-height: 5vh;
+            margin-bottom: 0.2rem;
+        }
+
+        #center-timer {
+            font-size: 18vh;
+        }
+        #center-timer p {
+            line-height: 18vh;
+            margin-bottom: 0.2rem;
+        }
+
+        #currenttime {
+            font-size: 5vh;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app" class="container-fluid main_container d-flex">
+    <div class="fullscreen flex-fill">
+        <div class="row header d-flex justify-content-between align-items-center">
+            <img src="./img/runcity-logo-raster-800.gif" class="img-fluid" id="logo"/>
+            <p id="gamename">Бегущий Город Казань 2о19</p>
+        </div>
+        <div class="row center-field">
+            <div class="col w-100">
+                <div class="row" id="center-field-header">
+                    <div class="col w-100 d-flex justify-content-center">
+                        <h1>Готовятся к старту команды:</h1>
+                    </div>
+                </div>
+                <div class="row" id="center-field-teams">
+                    <div class="col w-100">
+                        <div class="d-flex justify-content-start flex-wrap" v-if="ShowTeams">
+                            <div class="teamnumber cat-rider">3{{ CurrentStartingTeamPadded }}</div>
+                            <div class="teamnumber cat-griffin">8{{ CurrentStartingTeamPadded }}</div>
+                            <div class="teamnumber cat-lion">4{{ CurrentStartingTeamPadded }}</div>
+                            <div class="teamnumber cat-lion-mini">m4{{ CurrentStartingTeamPadded }}</div>
+                            <div class="teamnumber cat-sphynx">7{{ CurrentStartingTeamPadded }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" id="center-timer-caption" v-if="ShowTeams">
+                    <div class="col w-100 d-flex justify-content-center">
+                        <p>Старт через:</p>
+                    </div>
+                </div>
+                <div class="row" id="center-timer" v-if="ShowTeams">
+                    <div class="col w-100 d-flex justify-content-center">
+                        <p>{{ TimerText }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row bottom d-flex justify-content-around align-items-center">
+            <p id="currenttime">Время: {{ state.CurrentTimeText }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="./js/jquery-3.4.1.min.js"></script>
+<script src="./js/popper.min.js"></script>
+<script src="./js/bootstrap-4.3.1/js/bootstrap.min.js"></script>
+
+<script src="./js/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+
+<script>
+    const API_URL = "http://localhost:8082/runcitytime/";
+
+    function pad(num, size) {
+        var s = num+"";
+        while (s.length < size) s = "0" + s;
+        return s;
+    }
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            state: {
+                CurrentTimeText: "14:30:21",
+                CurrentStartingTeam: 3,
+                SecondsToStart: 85
+            },
+            timer: ''
+        },
+        computed: {
+            // геттер вычисляемого значения
+            TimerText: function () {
+                var min = Math.floor(this.state.SecondsToStart/60);
+                var sec = this.state.SecondsToStart % 60;
+                return pad(min, 2)+":"+pad(sec, 2);
+            },
+            CurrentStartingTeamPadded: function () {
+                return pad(this.state.CurrentStartingTeam, 2);
+            },
+            ShowTeams: function() {
+                return this.state.IsServiceActive && this.state.CurrentStartingTeam;
+            }
+        },
+        created () {
+            this.timer = setInterval(this.updateData, 250);
+        },
+        methods: {
+            updateData: function() {
+                var app = this;
+                axios.get(API_URL)
+                        .then(function(response) {
+                            app.state = response.data;
+                        });
+            }
+        },
+        beforeDestroy () {
+            clearInterval(this.timer)
+        }
+    })
+</script>
+</body>
+</html>

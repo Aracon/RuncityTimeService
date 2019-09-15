@@ -255,9 +255,11 @@ namespace BGTimeService
 
             bool startingNow;
             int secondsTillNextStart;
-            int? startingTeamNumberPure = GetTeamNumber(datetime, firstStart, intervalMin, out startingNow, out secondsTillNextStart);
+            int? startingTeamNumberPure = GetTeamNumber(datetime - new TimeSpan(0, 0, 1), firstStart, intervalMin, out startingNow, out secondsTillNextStart);
+            secondsTillNextStart = secondsTillNextStart - 1;
             state.CurrentStartingTeam = startingTeamNumberPure;
             state.SecondsToStart = secondsTillNextStart;
+            state.IsStartingNow = (secondsTillNextStart == 0);
 
             Debug.WriteLine(string.Format("{4} Starting team: {0}{1} in {2}:{3}", startingTeamNumberPure, startingNow ? " NOW" : "", secondsTillNextStart / 60, secondsTillNextStart % 60, DateTime.Now.ToLongTimeString()));
 
