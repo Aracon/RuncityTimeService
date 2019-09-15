@@ -54,6 +54,7 @@
             this.label10 = new System.Windows.Forms.Label();
             this.checkHttpActive = new System.Windows.Forms.CheckBox();
             this.groupHttpServer = new System.Windows.Forms.GroupBox();
+            this.label7 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numStartInterval)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numFirstTeamNumber)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numMaxTeamNumber)).BeginInit();
@@ -227,7 +228,7 @@
             // 
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.lblStatusMsg});
-            this.statusStrip.Location = new System.Drawing.Point(0, 421);
+            this.statusStrip.Location = new System.Drawing.Point(0, 440);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Size = new System.Drawing.Size(544, 22);
             this.statusStrip.TabIndex = 14;
@@ -254,7 +255,7 @@
             // 
             this.label8.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(13, 21);
+            this.label8.Location = new System.Drawing.Point(13, 25);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(47, 13);
             this.label8.TabIndex = 17;
@@ -263,7 +264,7 @@
             // numHttpPort
             // 
             this.numHttpPort.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numHttpPort.Location = new System.Drawing.Point(59, 19);
+            this.numHttpPort.Location = new System.Drawing.Point(59, 23);
             this.numHttpPort.Maximum = new decimal(new int[] {
             65535,
             0,
@@ -287,7 +288,7 @@
             // 
             this.label9.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(124, 21);
+            this.label9.Location = new System.Drawing.Point(124, 25);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(12, 13);
             this.label9.TabIndex = 19;
@@ -296,7 +297,7 @@
             // txtHttpSubpath
             // 
             this.txtHttpSubpath.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.txtHttpSubpath.Location = new System.Drawing.Point(142, 18);
+            this.txtHttpSubpath.Location = new System.Drawing.Point(142, 22);
             this.txtHttpSubpath.Name = "txtHttpSubpath";
             this.txtHttpSubpath.Size = new System.Drawing.Size(88, 20);
             this.txtHttpSubpath.TabIndex = 20;
@@ -306,7 +307,7 @@
             // 
             this.label10.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(236, 21);
+            this.label10.Location = new System.Drawing.Point(236, 25);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(12, 13);
             this.label10.TabIndex = 21;
@@ -316,7 +317,7 @@
             // 
             this.checkHttpActive.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.checkHttpActive.Appearance = System.Windows.Forms.Appearance.Button;
-            this.checkHttpActive.Location = new System.Drawing.Point(391, 15);
+            this.checkHttpActive.Location = new System.Drawing.Point(391, 19);
             this.checkHttpActive.Name = "checkHttpActive";
             this.checkHttpActive.Size = new System.Drawing.Size(110, 25);
             this.checkHttpActive.TabIndex = 22;
@@ -329,6 +330,7 @@
             // 
             this.groupHttpServer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupHttpServer.Controls.Add(this.label7);
             this.groupHttpServer.Controls.Add(this.numHttpPort);
             this.groupHttpServer.Controls.Add(this.checkHttpActive);
             this.groupHttpServer.Controls.Add(this.label8);
@@ -337,16 +339,28 @@
             this.groupHttpServer.Controls.Add(this.txtHttpSubpath);
             this.groupHttpServer.Location = new System.Drawing.Point(15, 359);
             this.groupHttpServer.Name = "groupHttpServer";
-            this.groupHttpServer.Size = new System.Drawing.Size(518, 51);
+            this.groupHttpServer.Size = new System.Drawing.Size(518, 70);
             this.groupHttpServer.TabIndex = 23;
             this.groupHttpServer.TabStop = false;
             this.groupHttpServer.Text = "Веб-сервер";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.label7.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.label7.Location = new System.Drawing.Point(6, 47);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(495, 13);
+            this.label7.TabIndex = 23;
+            this.label7.Text = "Для работы веб-сервера может потребоваться запуск приложения с правами администра" +
+    "тора";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(544, 443);
+            this.ClientSize = new System.Drawing.Size(544, 462);
             this.Controls.Add(this.groupHttpServer);
             this.Controls.Add(this.checkLockSettings);
             this.Controls.Add(this.statusStrip);
@@ -410,6 +424,7 @@
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.CheckBox checkHttpActive;
         private System.Windows.Forms.GroupBox groupHttpServer;
+        private System.Windows.Forms.Label label7;
     }
 }
 
